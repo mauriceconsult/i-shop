@@ -6,6 +6,8 @@ import CartItem from "./components/cart-item";
 import Summary from "./components/summary";
 import { useSyncExternalStore } from "react";
 
+export const dynamic = "force-dynamic";
+
 const CartPage = () => {  
   const emptySubscribe = () => () => {};  
   const isMounted = useSyncExternalStore(
