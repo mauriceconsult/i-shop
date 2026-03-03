@@ -4,9 +4,19 @@ import Container from "@/components/ui/container";
 import useCart from "@/hooks/use-cart";
 import CartItem from "./components/cart-item";
 import Summary from "./components/summary";
+import { useSyncExternalStore } from "react";
 
-const CartPage = () => {
+const CartPage = () => {  
+  const emptySubscribe = () => () => {};  
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
   const cart = useCart();
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <div className="bg-white">
