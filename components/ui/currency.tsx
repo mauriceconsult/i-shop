@@ -2,10 +2,10 @@
 
 import { useSyncExternalStore } from "react";
 
-const formatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
+interface CurrencyProps {
+  value?: string | number;
+  currency?: string;
+}
 
 interface CurrencyProps {
   value?: string | number;
@@ -13,7 +13,7 @@ interface CurrencyProps {
 
 const emptySubscribe = () => () => {};
 
-const Currency: React.FC<CurrencyProps> = ({ value }) => {
+const Currency: React.FC<CurrencyProps> = ({ value, currency = "USD" }) => {
   const isMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -21,6 +21,10 @@ const Currency: React.FC<CurrencyProps> = ({ value }) => {
   );
 
   if (!isMounted) return null;
+  const formatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  });
 
   return <div className="font-semibold">{formatter.format(Number(value))}</div>;
 };

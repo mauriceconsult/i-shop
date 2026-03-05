@@ -3,10 +3,12 @@
 import Button from "@/components/ui/button";
 import Currency from "@/components/ui/currency";
 import useCart from "@/hooks/use-cart";
+import { calculateFees } from "@/lib/platform";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+
 
 const Summary = () => {
   const router = useRouter();
@@ -28,6 +30,15 @@ const Summary = () => {
   );
   const [momoPhone, setMomoPhone] = useState("");
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
+  const [currency, setCurrency] = useState("USD");
+
+  // Fetch shop currency on mount
+  useEffect(() => {
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL}`)
+      .then((res) => setCurrency(res.data.currency ?? "USD"))
+      .catch(() => setCurrency("USD"));
+  }, []);
 
   // Debounced delivery quote fetch
   useEffect(() => {
@@ -58,7 +69,7 @@ const Summary = () => {
     0,
   );
   const deliveryCost = deliveryQuote?.cost ?? 0;
-  const grandTotal = itemsTotal + deliveryCost;
+  const { platformFee, grandTotal } = calculateFees(itemsTotal, deliveryCost);
 
   const pollMomoStatus = async (referenceId: string, orderId: string) => {
     setPollingStatus("pending");
@@ -154,7 +165,7 @@ const Summary = () => {
         {/* Items Total */}
         <div className="flex items-center justify-between border-t border-gray-200 pt-4">
           <div className="text-base font-medium text-gray-500">Items Total</div>
-          <Currency value={itemsTotal} />
+          <Currency value={itemsTotal} currency={currency} />
         </div>
 
         {/* Delivery Method */}
@@ -251,22 +262,36 @@ const Summary = () => {
           </div>
         </div>
 
-        {/* MoMo Phone */}
+        {/* MoMo Phone - required when momo selected */}
         {paymentMethod === "momo" && (
           <div className="border-t border-gray-200 pt-4 space-y-2">
-            <div className="text-base font-medium text-gray-500">
-              MoMo Phone Number
+            <div className="flex items-center gap-x-1">
+              <div className="text-base font-medium text-gray-500">
+                MoMo Phone Number
+              </div>
+              <span className="text-red-500 text-sm">*</span>{" "}
+              {/* ← required indicator */}
             </div>
             <input
               type="tel"
               placeholder="e.g. +256700000000"
               value={momoPhone}
               onChange={(e) => setMomoPhone(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+              className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black ${
+                paymentMethod === "momo" && !momoPhone
+                  ? "border-red-400 bg-red-50" // ← red border when empty
+                  : "border-gray-300"
+              }`}
             />
-            <p className="text-xs text-gray-400">
-              You will receive a payment prompt on this number.
-            </p>
+            {paymentMethod === "momo" && !momoPhone ? (
+              <p className="text-xs text-red-500">
+                MoMo phone number is required for mobile money payment.
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400">
+                You will receive a payment prompt on this number.
+              </p>
+            )}
           </div>
         )}
 
@@ -279,18 +304,26 @@ const Summary = () => {
             {fetchingQuote ? (
               <span className="text-sm text-gray-400">Calculating...</span>
             ) : (
-              <Currency value={deliveryCost} />
+              <Currency value={deliveryCost} currency={currency} />
             )}
           </div>
         )}
 
+        {/* Platform Fee */}
+        <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+          <div className="text-base font-medium text-gray-500">
+            Platform Fee (10%)
+          </div>
+          <Currency value={platformFee} currency={currency} />
+        </div>
+
         {/* Grand Total */}
         <div className="flex items-center justify-between border-t border-gray-200 pt-4">
           <div className="text-base font-bold text-gray-900">Grand Total</div>
-          <Currency value={grandTotal} />
+          <Currency value={grandTotal} currency={currency} />
         </div>
-      </div>
-
+      </div>{" "}
+      {/* ← closes space-y-4 */}
       <Button
         onClick={onCheckout}
         disabled={
@@ -307,7 +340,6 @@ const Summary = () => {
             ? "Fetching Quote..."
             : "Checkout"}
       </Button>
-
       {pollingStatus === "pending" && (
         <p className="text-xs text-center text-gray-400 mt-2">
           Please approve the payment prompt on your phone. Do not close this
