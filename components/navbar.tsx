@@ -26,17 +26,15 @@ const Navbar = async () => {
           <div className="flex items-center gap-x-4">
             {/* Become a Seller CTA */}
             <Link
-              href={process.env.NEXT_PUBLIC_ADMIN_URL ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/sell"
               className="
-                hidden sm:flex items-center gap-x-1
-                text-sm font-medium text-gray-600
-                hover:text-black transition
-                border border-gray-300 rounded-full
-                px-4 py-1.5
-                hover:border-black
-              "
+      hidden md:flex items-center gap-x-1
+      text-sm font-medium text-gray-600
+      hover:text-black transition
+      border border-gray-300 rounded-full
+      px-4 py-1.5
+      hover:border-black
+    "
             >
               <Store className="h-3.5 w-3.5" />
               Open Your Store
