@@ -7,6 +7,7 @@ import NavbarActions from "./navbar-actions";
 import { Store } from "lucide-react";
 
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 const Navbar = async () => {
   const categories = await getCategories();
