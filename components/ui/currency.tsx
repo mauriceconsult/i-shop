@@ -1,19 +1,18 @@
+// i-shop/components/ui/currency.tsx
 "use client";
 
 import { useSyncExternalStore } from "react";
-
-interface CurrencyProps {
-  value?: string | number;
-  currency?: string;
-}
-
-interface CurrencyProps {
-  value?: string | number;
-}
+import { useCurrency } from "@/context/currency-context";
 
 const emptySubscribe = () => () => {};
 
-const Currency: React.FC<CurrencyProps> = ({ value, currency = "USD" }) => {
+interface CurrencyProps {
+  value?: string | number;
+}
+
+const Currency: React.FC<CurrencyProps> = ({ value }) => {
+  const { currency, locale } = useCurrency();
+
   const isMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -21,7 +20,8 @@ const Currency: React.FC<CurrencyProps> = ({ value, currency = "USD" }) => {
   );
 
   if (!isMounted) return null;
-  const formatter = new Intl.NumberFormat("en-US", {
+
+  const formatter = new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
   });
