@@ -1,3 +1,4 @@
+// components/gallery/gallery-tab.tsx
 import Image from "next/image";
 import { Tab } from "@headlessui/react";
 import { cn } from "@/lib/utils";
@@ -11,15 +12,15 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ image }) => {
   return (
     <Tab className="relative flex aspect-square cursor-pointer items-center justify-center rounded-md bg-white">
       {({ selected }) => (
-        <div>
-          <span className="absolute h-full w-full aspect-square overflow-hidden rounded-md">
-            <Image
-              fill
-              src={image.url}
-              alt=""
-              className="object-cover object-center"
-            />
-          </span>
+        <div className="relative h-full w-full overflow-hidden rounded-md">
+          {" "}
+          {/* ← added relative h-full w-full */}
+          <Image
+            fill
+            src={image.url}
+            alt=""
+            className="object-cover object-center"
+          />
           <span
             className={cn(
               "absolute inset-0 rounded-md ring-2 ring-offset-2",
