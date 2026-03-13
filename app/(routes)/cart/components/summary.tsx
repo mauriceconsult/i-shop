@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-
 const Summary = () => {
   const router = useRouter();
   const items = useCart((state) => state.items);
@@ -30,15 +29,8 @@ const Summary = () => {
   );
   const [momoPhone, setMomoPhone] = useState("");
   const [pollingStatus, setPollingStatus] = useState<string | null>(null);
-  const [currency, setCurrency] = useState("USD");
 
-  // Fetch shop currency on mount
-  useEffect(() => {
-    axios
-      .get(`${process.env.NEXT_PUBLIC_API_URL}`)
-      .then((res) => setCurrency(res.data.currency ?? "USD"))
-      .catch(() => setCurrency("USD"));
-  }, []);
+  // ← removed currency state and fetch — handled by CurrencyContext
 
   // Debounced delivery quote fetch
   useEffect(() => {
@@ -162,10 +154,11 @@ const Summary = () => {
     <div className="mt-16 rounded-md bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
       <h2 className="text-lg font-medium text-gray-500">Order Summary</h2>
       <div className="mt-6 space-y-4">
+
         {/* Items Total */}
         <div className="flex items-center justify-between border-t border-gray-200 pt-4">
           <div className="text-base font-medium text-gray-500">Items Total</div>
-          <Currency value={itemsTotal} currency={currency} />
+          <Currency value={itemsTotal} /> {/* ← removed currency prop */}
         </div>
 
         {/* Delivery Method */}
@@ -269,8 +262,7 @@ const Summary = () => {
               <div className="text-base font-medium text-gray-500">
                 MoMo Phone Number
               </div>
-              <span className="text-red-500 text-sm">*</span>{" "}
-              {/* ← required indicator */}
+              <span className="text-red-500 text-sm">*</span>
             </div>
             <input
               type="tel"
@@ -279,7 +271,7 @@ const Summary = () => {
               onChange={(e) => setMomoPhone(e.target.value)}
               className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black ${
                 paymentMethod === "momo" && !momoPhone
-                  ? "border-red-400 bg-red-50" // ← red border when empty
+                  ? "border-red-400 bg-red-50"
                   : "border-gray-300"
               }`}
             />
@@ -304,7 +296,7 @@ const Summary = () => {
             {fetchingQuote ? (
               <span className="text-sm text-gray-400">Calculating...</span>
             ) : (
-              <Currency value={deliveryCost} currency={currency} />
+              <Currency value={deliveryCost} /> 
             )}
           </div>
         )}
@@ -314,23 +306,24 @@ const Summary = () => {
           <div className="text-base font-medium text-gray-500">
             Platform Fee (10%)
           </div>
-          <Currency value={platformFee} currency={currency} />
+          <Currency value={platformFee} /> 
         </div>
 
         {/* Grand Total */}
         <div className="flex items-center justify-between border-t border-gray-200 pt-4">
           <div className="text-base font-bold text-gray-900">Grand Total</div>
-          <Currency value={grandTotal} currency={currency} />
+          <Currency value={grandTotal} /> 
         </div>
-      </div>{" "}
-      {/* ← closes space-y-4 */}
+
+      </div>
       <Button
         onClick={onCheckout}
         disabled={
           items.length === 0 ||
           fetchingQuote ||
           (deliveryMethod !== "pickup" && !deliveryQuote) ||
-          !!pollingStatus
+          !!pollingStatus ||
+          (paymentMethod === "momo" && !momoPhone)
         }
         className="w-full mt-6"
       >
