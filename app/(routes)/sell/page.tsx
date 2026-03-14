@@ -1,9 +1,13 @@
-// app/(routes)/sell/page.tsx
+"use client"; 
+
 import Link from "next/link";
 import Container from "@/components/ui/container";
 import { Store, TrendingUp, Globe, Smartphone } from "lucide-react";
+import { useState } from "react";
 
 const SellPage = () => {
+  const [agreed, setAgreed] = useState(false); 
+
   return (
     <div className="bg-white">
       <Container>
@@ -50,8 +54,7 @@ const SellPage = () => {
               </div>
               <h3 className="font-semibold text-gray-900">Mobile Money</h3>
               <p className="text-sm text-gray-500">
-                Accept MTN MoMo and Airtel Money. Payouts straight to your
-                phone.
+                Accept MTN MoMo and Airtel Money. Payouts straight to your phone.
               </p>
             </div>
             <div className="space-y-2">
@@ -95,24 +98,59 @@ const SellPage = () => {
             </p>
           </div>
 
-          {/* Final CTA */}
-          <div className="mt-16">
+          {/* Agreement + Final CTA */}
+          <div className="mt-16 flex flex-col items-center gap-y-4">
+            <div className="flex items-start gap-x-3 max-w-md text-left">
+              <input
+                type="checkbox"
+                id="agree"
+                checked={agreed}
+                className="mt-1 accent-black cursor-pointer"
+                onChange={(e) => setAgreed(e.target.checked)}
+              />
+              <label
+                htmlFor="agree"
+                className="text-sm text-gray-500 cursor-pointer"
+              >
+                I have read and agree to the{" "}
+                <Link
+                  href="/legal/seller-agreement"
+                  className="underline hover:text-black"
+                >
+                  Seller Agreement
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/legal/terms"
+                  className="underline hover:text-black"
+                >
+                  Terms of Service
+                </Link>
+              </label>
+            </div>
+
             <Link
-              href={process.env.NEXT_PUBLIC_ADMIN_URL ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="
-                inline-flex items-center gap-x-2
-                bg-black text-white
-                px-8 py-3 rounded-full
-                font-semibold text-sm
-                hover:opacity-75 transition
-              "
+              href={agreed ? (process.env.NEXT_PUBLIC_ADMIN_URL ?? "#") : "#"}
+              target={agreed ? "_blank" : undefined}
+              rel={agreed ? "noopener noreferrer" : undefined}
+              onClick={(e) => !agreed && e.preventDefault()}
+              className={`inline-flex items-center gap-x-2 px-8 py-3 rounded-full font-semibold text-sm transition
+                ${agreed
+                  ? "bg-black text-white hover:opacity-75"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed pointer-events-none"
+                }`}
             >
               <Store className="h-4 w-4" />
-              Get Started Now
+              Create Your Store
             </Link>
+
+            {!agreed && (
+              <p className="text-xs text-gray-400">
+                Please accept the terms above to continue.
+              </p>
+            )}
           </div>
+
         </div>
       </Container>
     </div>
