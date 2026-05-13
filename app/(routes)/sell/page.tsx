@@ -63,7 +63,7 @@ const SellPage = () => {
               </div>
               <h3 className="font-semibold text-gray-900">Global Payments</h3>
               <p className="text-sm text-gray-500">
-                Accept cards via Stripe for customers in Europe and America.
+                Accept cards via Stripe for customers worldwide.
               </p>
             </div>
             <div className="space-y-2">

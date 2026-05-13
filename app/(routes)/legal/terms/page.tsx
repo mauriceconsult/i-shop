@@ -1,5 +1,3 @@
-// i-shop/app/(routes)/legal/terms/page.tsx
-
 import Container from "@/components/ui/container";
 
 const TermsPage = () => {

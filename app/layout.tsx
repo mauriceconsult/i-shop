@@ -5,12 +5,18 @@ import Navbar from "@/components/navbar";
 import ModalProvider from "@/providers/modal-provider";
 import ToastProvider from "@/providers/toast-provider";
 import { CurrencyProvider } from "@/context/currency-context";
+import type { Metadata } from "next"; 
 
 const font = Urbanist({ subsets: ["latin"] });
 
-export const Metadata = {
-  title: "Shop",
+// Correct metadata export
+export const metadata: Metadata = {
+  title: "Vendly", // Better to make it more specific
   description: "Shop",
+  // You can add more fields here
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -24,9 +30,7 @@ export default function RootLayout({
         <ModalProvider />
         <ToastProvider />
         <Navbar />
-        <CurrencyProvider>
-        {children}
-        </CurrencyProvider>
+        <CurrencyProvider>{children}</CurrencyProvider>
         <Footer />
       </body>
     </html>

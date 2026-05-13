@@ -1,5 +1,3 @@
-// i-shop/app/(routes)/legal/seller-agreement/page.tsx
-
 import Container from "@/components/ui/container";
 
 const SellerAgreementPage = () => {
