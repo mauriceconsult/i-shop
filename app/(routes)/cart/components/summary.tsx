@@ -206,7 +206,6 @@ const Summary = () => {
       <h2 className="text-lg font-medium text-gray-500">Order Summary</h2>
 
       <div className="mt-6 space-y-4">
-
         {/* Items Total */}
         <div className="flex items-center justify-between border-t border-gray-200 pt-4">
           <div className="text-base font-medium text-gray-500">Items Total</div>
@@ -229,8 +228,7 @@ const Summary = () => {
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
           >
             <option value="pickup">Self Pickup — Free</option>
-            <option value="standard">Standard Delivery</option>
-            <option value="uber_direct">Uber Direct (Door to Door)</option>
+            <option value="dukaboda">Dukaboda Delivery — Door to Door</option>
           </select>
         </div>
 
@@ -248,10 +246,11 @@ const Summary = () => {
                 disabled={gpsLoading}
                 className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
               >
-                {gpsLoading
-                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  : <Navigation className="h-3.5 w-3.5" />
-                }
+                {gpsLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Navigation className="h-3.5 w-3.5" />
+                )}
                 {gpsLoading ? "Detecting..." : "Use my location"}
               </button>
             </div>
@@ -260,7 +259,8 @@ const Summary = () => {
             {gpsCoords && (
               <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
                 <MapPin className="h-3 w-3" />
-                GPS location detected — your coordinates will be used for precise delivery
+                GPS location detected — your coordinates will be used for
+                precise delivery
               </div>
             )}
 
@@ -289,7 +289,12 @@ const Summary = () => {
             {deliveryQuote && !fetchingQuote && (
               <div className="flex items-center justify-between bg-white border border-gray-200 rounded px-3 py-2">
                 <span className="text-xs text-green-600">
-                  ~{deliveryQuote.estimatedMinutes} min · via {deliveryQuote.provider.replace("_", " ")}
+                  ~{deliveryQuote.estimatedMinutes} min · via{" "}
+                  {deliveryQuote.provider === "custom"
+                    ? "Dukaboda"
+                    : deliveryQuote.provider === "safeboda"
+                      ? "SafeBoda"
+                      : deliveryQuote.provider.replace(/_/g, " ")}
                 </span>
                 <Currency value={deliveryQuote.cost} />
               </div>
@@ -299,7 +304,9 @@ const Summary = () => {
 
         {/* Phone Number */}
         <div className="border-t border-gray-200 pt-4 space-y-2">
-          <div className="text-base font-medium text-gray-500">Phone Number</div>
+          <div className="text-base font-medium text-gray-500">
+            Phone Number
+          </div>
           <input
             type="tel"
             placeholder="e.g. +256700000000"
@@ -316,18 +323,30 @@ const Summary = () => {
           </div>
           <div className="space-y-2">
             <label className="flex items-center gap-x-2 cursor-pointer">
-              <input type="radio" name="payment" value="momo"
+              <input
+                type="radio"
+                name="payment"
+                value="momo"
                 checked={paymentMethod === "momo"}
                 onChange={() => setPaymentMethod("momo")}
-                className="accent-black" />
-              <span className="text-sm text-gray-600">📱 Mobile Money (MoMo)</span>
+                className="accent-black"
+              />
+              <span className="text-sm text-gray-600">
+                📱 Mobile Money (MoMo)
+              </span>
             </label>
             <label className="flex items-center gap-x-2 cursor-pointer">
-              <input type="radio" name="payment" value="stripe"
+              <input
+                type="radio"
+                name="payment"
+                value="stripe"
                 checked={paymentMethod === "stripe"}
                 onChange={() => setPaymentMethod("stripe")}
-                className="accent-black" />
-              <span className="text-sm text-gray-600">💳 Card Payment (Stripe)</span>
+                className="accent-black"
+              />
+              <span className="text-sm text-gray-600">
+                💳 Card Payment (Stripe)
+              </span>
             </label>
           </div>
         </div>
@@ -336,7 +355,9 @@ const Summary = () => {
         {paymentMethod === "momo" && (
           <div className="border-t border-gray-200 pt-4 space-y-2">
             <div className="flex items-center gap-1">
-              <div className="text-base font-medium text-gray-500">MoMo Phone Number</div>
+              <div className="text-base font-medium text-gray-500">
+                MoMo Phone Number
+              </div>
               <span className="text-red-500 text-sm">*</span>
             </div>
             <input
@@ -348,27 +369,37 @@ const Summary = () => {
                 !momoPhone ? "border-red-300 bg-red-50" : "border-gray-300"
               }`}
             />
-            {!momoPhone
-              ? <p className="text-xs text-red-500">Required for mobile money payment.</p>
-              : <p className="text-xs text-gray-400">You will receive a payment prompt on this number.</p>
-            }
+            {!momoPhone ? (
+              <p className="text-xs text-red-500">
+                Required for mobile money payment.
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400">
+                You will receive a payment prompt on this number.
+              </p>
+            )}
           </div>
         )}
 
         {/* Delivery Cost */}
         {deliveryMethod !== "pickup" && deliveryQuote && (
           <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-            <div className="text-base font-medium text-gray-500">Delivery Cost</div>
-            {fetchingQuote
-              ? <span className="text-sm text-gray-400">Calculating…</span>
-              : <Currency value={deliveryCost} />
-            }
+            <div className="text-base font-medium text-gray-500">
+              Delivery Cost
+            </div>
+            {fetchingQuote ? (
+              <span className="text-sm text-gray-400">Calculating…</span>
+            ) : (
+              <Currency value={deliveryCost} />
+            )}
           </div>
         )}
 
         {/* Platform Fee */}
         <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-          <div className="text-base font-medium text-gray-500">Platform Fee (10%)</div>
+          <div className="text-base font-medium text-gray-500">
+            Platform Fee (10%)
+          </div>
           <Currency value={platformFee} />
         </div>
 
@@ -377,7 +408,6 @@ const Summary = () => {
           <div className="text-base font-bold text-gray-900">Grand Total</div>
           <Currency value={grandTotal} />
         </div>
-
       </div>
 
       <Button
@@ -400,7 +430,8 @@ const Summary = () => {
 
       {pollingStatus === "pending" && (
         <p className="text-xs text-center text-gray-400 mt-2">
-          Please approve the payment prompt on your phone. Do not close this page.
+          Please approve the payment prompt on your phone. Do not close this
+          page.
         </p>
       )}
     </div>
