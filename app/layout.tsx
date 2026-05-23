@@ -11,11 +11,22 @@ const font = Urbanist({ subsets: ["latin"] });
 
 // Correct metadata export
 export const metadata: Metadata = {
-  title: "Vendly", // Better to make it more specific
-  description: "Shop",
-  // You can add more fields here
+  title: {
+    default: "Vendly — Online Marketplace",
+    template: "%s | Vendly",
+  },
+  description:
+    "Shop from local vendors and entrepreneurs across Uganda. Fast delivery via Dukaboda.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Vendly — Online Marketplace",
+    description: "Shop from local vendors across Uganda.",
+    images: [{ url: "/logo.svg", width: 200, height: 60, alt: "Vendly" }],
+    type: "website",
   },
 };
 
