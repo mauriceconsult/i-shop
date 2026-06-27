@@ -1,4 +1,4 @@
-// lib/delivery/providers/custom.ts (Vendly)
+// lib/delivery/providers/custom.ts
 
 import type {
   DeliveryProvider,
@@ -7,6 +7,21 @@ import type {
   CreateDeliveryRequest,
   CreateDeliveryResponse,
 } from "@/lib/delivery/types";
+
+export type VehicleType = "bicycle" | "motorcycle" | "car";
+
+interface VehicleTier {
+  baseFare: number;
+  perKm: number;
+  maxKm: number | null;
+  speedKmh: number;
+}
+
+export const VEHICLE_TIERS: Record<VehicleType, VehicleTier> = {
+  bicycle: { baseFare: 2_000, perKm: 800, maxKm: 3, speedKmh: 15 },
+  motorcycle: { baseFare: 3_000, perKm: 1_200, maxKm: 8, speedKmh: 35 },
+  car: { baseFare: 5_000, perKm: 2_000, maxKm: null, speedKmh: 25 },
+};
 
 function haversineKm(
   lat1: number,
@@ -25,8 +40,31 @@ function haversineKm(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const BASE_FARE = 3_000;
-const PER_KM = 1_200;
+export function availableVehicles(km: number): VehicleType[] {
+  return (Object.entries(VEHICLE_TIERS) as [VehicleType, VehicleTier][])
+    .filter(([, tier]) => tier.maxKm === null || km <= tier.maxKm)
+    .sort(
+      ([, a], [, b]) => a.baseFare + km * a.perKm - (b.baseFare + km * b.perKm),
+    )
+    .map(([type]) => type);
+}
+
+function quoteForVehicle(km: number, vehicleType: VehicleType) {
+  const tier = VEHICLE_TIERS[vehicleType];
+
+  if (tier.maxKm !== null && km > tier.maxKm) {
+    const available = availableVehicles(km).join(", ") || "none";
+    throw new Error(
+      `${vehicleType} is not available for ${km.toFixed(1)} km ` +
+        `(max ${tier.maxKm} km). Available: ${available}.`,
+    );
+  }
+
+  return {
+    cost: Math.round(tier.baseFare + km * tier.perKm),
+    estimatedMinutes: Math.round((km / tier.speedKmh) * 60 + 5),
+  };
+}
 
 const ZURIA_URL = process.env.ZURIA_API_URL ?? "http://localhost:4000";
 const PLATFORM_API_KEY = process.env.PLATFORM_API_KEY ?? "";
@@ -41,18 +79,28 @@ export const customProvider: DeliveryProvider = {
       req.destination.lat,
       req.destination.lng,
     );
+
+    // vehicleType is now a typed optional field on DeliveryQuoteRequest
+    const vehicleType: VehicleType = req.vehicleType ?? "motorcycle";
+    const { cost, estimatedMinutes } = quoteForVehicle(km, vehicleType);
+
     return {
       quoteId: `custom_quote_${Date.now()}`,
       provider: "custom",
-      cost: Math.round(BASE_FARE + km * PER_KM),
+      cost,
       currency: "UGX",
-      estimatedMinutes: Math.round(10 + km * 4),
+      estimatedMinutes,
       expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+      distanceKm: parseFloat(km.toFixed(2)),
+      vehicleType,
+      maxKm: VEHICLE_TIERS[vehicleType].maxKm,
     };
   },
 
   async createJob(req: CreateDeliveryRequest): Promise<CreateDeliveryResponse> {
-    // Delegate to Zuria — it owns the DB
+    // vehicleType is now a typed optional field on CreateDeliveryRequest
+    const vehicleType: VehicleType = req.vehicleType ?? "motorcycle";
+
     const res = await fetch(`${ZURIA_URL}/api/delivery/jobs`, {
       method: "POST",
       headers: {
@@ -62,6 +110,7 @@ export const customProvider: DeliveryProvider = {
       body: JSON.stringify({
         orderId: req.orderId,
         deliveryCost: 0,
+        vehicleType,
       }),
     });
 
@@ -73,11 +122,6 @@ export const customProvider: DeliveryProvider = {
     }
 
     const job = await res.json();
-
-    return {
-      deliveryId: job.id,
-      status: "pending",
-      provider: "custom",
-    };
+    return { deliveryId: job.id, status: "pending", provider: "custom" };
   },
 };

@@ -1,7 +1,8 @@
 // lib/platform.ts (Vendly storefront)
 
 export const PLATFORM_FEE_PERCENT  = 10;
-export const DELIVERY_FEE_PERCENT  = 10;
+export const DELIVERY_FEE_PERCENT = 10;
+export const PAYMENT_PROCESSING_PERCENT = 2;
 
 export type ApprovalSource = "shop" | "platform";
 
@@ -22,6 +23,7 @@ export const calculateFees = (
 ) => {
   // Sales commission — always
   const platformFee = Math.round((subtotal * PLATFORM_FEE_PERCENT) / 100);
+  const paymentProcessingFee = Math.round((subtotal * PAYMENT_PROCESSING_PERCENT) / 100);
 
   // Delivery commission — only for wildcard (platform-approved) riders
   const deliveryFee = approvalSource === "platform"
@@ -35,16 +37,17 @@ export const calculateFees = (
   const shopPayout = subtotal - platformFee;
 
   // Grand total customer pays — unchanged regardless of rider type
-  const grandTotal = subtotal + deliveryCost + platformFee;
+  const grandTotal = subtotal + deliveryCost + platformFee + paymentProcessingFee;
 
   // What Vendly/Dukaboda keeps in total
-  const vendlyTotal = platformFee + deliveryFee;
+  const vendlyTotal = platformFee + deliveryFee + paymentProcessingFee;
 
   return {
     platformFee,   // 10% of items — always
     deliveryFee,   // 10% of delivery — wildcard riders only
     riderPayout,   // delivery fee minus Vendly cut
     shopPayout,    // items minus platform fee
+    paymentProcessingFee, // 2% of items — always
     grandTotal,    // customer pays this
     vendlyTotal,   // Vendly keeps this
   };

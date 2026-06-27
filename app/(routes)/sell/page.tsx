@@ -54,7 +54,8 @@ const SellPage = () => {
               </div>
               <h3 className="font-semibold text-gray-900">Mobile Money</h3>
               <p className="text-sm text-gray-500">
-                Accept MTN MoMo and Airtel Money. Payouts straight to your phone.
+                Accept MTN MoMo and Airtel Money. Payouts straight to your
+                phone.
               </p>
             </div>
             <div className="space-y-2">
@@ -88,7 +89,7 @@ const SellPage = () => {
               No monthly fees. No hidden charges.
             </p>
             <div className="text-4xl font-bold text-gray-900">
-              10%
+              (10% platform fee + 2% payment processing)
               <span className="text-lg font-normal text-gray-500 ml-2">
                 per transaction
               </span>
@@ -135,9 +136,10 @@ const SellPage = () => {
               rel={agreed ? "noopener noreferrer" : undefined}
               onClick={(e) => !agreed && e.preventDefault()}
               className={`inline-flex items-center gap-x-2 px-8 py-3 rounded-full font-semibold text-sm transition
-                ${agreed
-                  ? "bg-black text-white hover:opacity-75"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed pointer-events-none"
+                ${
+                  agreed
+                    ? "bg-black text-white hover:opacity-75"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed pointer-events-none"
                 }`}
             >
               <Store className="h-4 w-4" />
@@ -150,7 +152,6 @@ const SellPage = () => {
               </p>
             )}
           </div>
-
         </div>
       </Container>
     </div>

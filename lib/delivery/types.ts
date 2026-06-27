@@ -1,5 +1,7 @@
 // lib/delivery/types.ts
 
+import { VehicleType } from "../providers/custom";
+
 // ── Shared primitives ─────────────────────────────────────────────────
 
 export interface LatLng {
@@ -24,6 +26,7 @@ export interface DeliveryQuoteRequest {
   destination: LatLng & {
     address: string;
   };
+  vehicleType?: VehicleType; // optional field for vehicle type
 }
 
 export interface DeliveryQuoteResponse {
@@ -33,14 +36,17 @@ export interface DeliveryQuoteResponse {
   currency:         string;
   estimatedMinutes: number;
   expiresAt:        string;
-  raw?:             unknown;
+  distanceKm:       number;
+  vehicleType:      VehicleType;
+  maxKm:            number | null;
 }
 
 // ── Create job ────────────────────────────────────────────────────────
 
 export interface CreateDeliveryRequest {
   quoteId:  string;
-  orderId:  string;
+  orderId: string;
+  vehicleType?: VehicleType;
   shopId:   string;
   provider: string;
   origin: LatLng & {
