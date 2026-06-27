@@ -39,6 +39,9 @@ export const mockProvider: DeliveryProvider = {
       provider: "mock",
       cost,
       currency: "UGX",
+      distanceKm: Number(km.toFixed(2)),
+      vehicleType: "motorcycle",
+      maxKm: 50,
       estimatedMinutes: Math.round(10 + km * 3),
       expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
     };
