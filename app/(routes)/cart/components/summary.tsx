@@ -2,6 +2,7 @@
 
 import Button from "@/components/ui/button";
 import Currency from "@/components/ui/currency";
+import { useCurrency } from "@/context/currency-context";
 import useCart from "@/hooks/use-cart";
 import { calculateFees } from "@/lib/platform";
 import axios from "axios";
@@ -26,6 +27,7 @@ interface DeliveryQuote {
 
 const Summary = () => {
   const router  = useRouter();
+  const { currency } = useCurrency();
   const items   = useCart((state) => state.items);
   const removeAll = useCart((state) => state.removeAll);
 
@@ -41,10 +43,20 @@ const Summary = () => {
   // ── Payment state ──────────────────────────────────────────────────────────
   const [phone,            setPhone]            = useState("");
   const [paymentMethod,    setPaymentMethod]    = useState<"stripe" | "momo">("momo");
+  const [momoProviderId,   setMomoProviderId]   = useState<"mtn-momo" | "mpesa">("mtn-momo");
   const [momoPhone,        setMomoPhone]        = useState("");
   const [pollingStatus,    setPollingStatus]    = useState<string | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const momoProviders = [
+    { id: "mtn-momo" as const, label: "MTN MoMo", currency: "UGX" },
+    { id: "mpesa" as const, label: "M-Pesa", currency: "KES" },
+  ];
+  const selectedMomoProvider = momoProviders.find(
+    (provider) => provider.id === momoProviderId
+  );
+  const momoProviderAvailable =
+    selectedMomoProvider?.currency === currency.toUpperCase();
 
   // ── GPS location ───────────────────────────────────────────────────────────
   const requestGps = () => {
@@ -67,6 +79,10 @@ const Summary = () => {
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
+
+  useEffect(() => {
+    setMomoProviderId(currency.toUpperCase() === "KES" ? "mpesa" : "mtn-momo");
+  }, [currency]);
 
   // ── Fetch delivery quote (debounced) ────────────────────────────────────────
   useEffect(() => {
@@ -112,7 +128,7 @@ const Summary = () => {
   const { platformFee, grandTotal } = calculateFees(itemsTotal, deliveryCost);
 
   // ── MoMo polling ───────────────────────────────────────────────────────────
-  const pollMomoStatus = async (referenceId: string, orderId: string) => {
+  const pollMobileMoneyStatus = async (referenceId: string, orderId: string) => {
     setPollingStatus("pending");
     let attempts = 0;
     const maxAttempts = 12;
@@ -120,7 +136,7 @@ const Summary = () => {
     const poll = async (): Promise<void> => {
       if (attempts >= maxAttempts) {
         setPollingStatus(null);
-        toast.error("Payment timed out. Please try again.");
+        toast.error("Mobile money payment timed out. Please try again.");
         return;
       }
       try {
@@ -137,7 +153,7 @@ const Summary = () => {
         }
         if (data.status === "FAILED") {
           setPollingStatus(null);
-          toast.error("Payment failed. Please try again.");
+          toast.error("Mobile money payment failed. Please try again.");
           return;
         }
         attempts++;
@@ -193,10 +209,10 @@ const Summary = () => {
       }
       const { data } = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/checkout/momo`,
-        { ...payload, phone: momoPhone }
+        { ...payload, phone: momoPhone, providerId: momoProviderId }
       );
-      toast.success("Check your phone for a MoMo payment prompt.");
-      await pollMomoStatus(data.referenceId, data.orderId);
+      toast.success("Check your phone for a mobile money payment prompt.");
+      await pollMobileMoneyStatus(data.referenceId, data.orderId);
     }
   };
 
@@ -332,7 +348,7 @@ const Summary = () => {
                 className="accent-black"
               />
               <span className="text-sm text-gray-600">
-                📱 Mobile Money (MoMo)
+                📱 Mobile Money
               </span>
             </label>
             <label className="flex items-center gap-x-2 cursor-pointer">
@@ -354,15 +370,52 @@ const Summary = () => {
         {/* MoMo phone */}
         {paymentMethod === "momo" && (
           <div className="border-t border-gray-200 pt-4 space-y-2">
+            <div className="text-base font-medium text-gray-500">
+              Mobile Money Provider
+            </div>
+            <div className="space-y-2">
+              {momoProviders.map((provider) => (
+                <label
+                  key={provider.id}
+                  className={`flex items-center gap-x-2 ${
+                    provider.currency === currency.toUpperCase()
+                      ? "cursor-pointer"
+                      : "cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="momoProvider"
+                    value={provider.id}
+                    checked={momoProviderId === provider.id}
+                    disabled={provider.currency !== currency.toUpperCase()}
+                    onChange={() => setMomoProviderId(provider.id)}
+                    className="accent-black"
+                  />
+                  <span className="text-sm text-gray-600">
+                    {provider.label} ({provider.currency})
+                  </span>
+                </label>
+              ))}
+            </div>
+            {!momoProviderAvailable && (
+              <p className="text-xs text-red-500">
+                Select a mobile money provider that supports {currency}.
+              </p>
+            )}
             <div className="flex items-center gap-1">
               <div className="text-base font-medium text-gray-500">
-                MoMo Phone Number
+                {selectedMomoProvider?.label} Phone Number
               </div>
               <span className="text-red-500 text-sm">*</span>
             </div>
             <input
               type="tel"
-              placeholder="e.g. +256700000000"
+              placeholder={
+                momoProviderId === "mpesa"
+                  ? "e.g. +254712345678"
+                  : "e.g. +256700000000"
+              }
               value={momoPhone}
               onChange={(e) => setMomoPhone(e.target.value)}
               className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black ${
@@ -417,12 +470,12 @@ const Summary = () => {
           fetchingQuote ||
           (deliveryMethod !== "pickup" && !deliveryQuote) ||
           !!pollingStatus ||
-          (paymentMethod === "momo" && !momoPhone)
+          (paymentMethod === "momo" && (!momoPhone || !momoProviderAvailable))
         }
         className="w-full mt-6"
       >
         {pollingStatus === "pending"
-          ? "Waiting for MoMo payment…"
+          ? "Waiting for mobile money payment…"
           : fetchingQuote
             ? "Fetching quote…"
             : "Checkout"}
